@@ -1,5 +1,4 @@
 "use server"
-
 import { db } from "@/lib/db"
 import { postLikes, posts } from "@/lib/db/schema"
 import { getAnonId } from "@/lib/anon"
@@ -33,7 +32,6 @@ const TAG_BY_BOARD: Record<string, PostDTO["tag"]> = {
 
 export async function getPosts(): Promise<PostDTO[]> {
   const anonId = await getAnonId()
-
   const rows = await db
     .select({
       id: posts.id,
@@ -56,7 +54,6 @@ export async function getPosts(): Promise<PostDTO[]> {
     .groupBy(posts.id)
     .orderBy(desc(posts.createdAt))
 
-  // Which of these posts the current visitor liked
   const ids = rows.map((r) => r.id)
   const likedIds = new Set<number>()
   if (ids.length > 0) {
@@ -99,7 +96,6 @@ export async function createPost(input: {
   const title = input.title.trim()
   const preview = input.preview.trim()
   if (!title) throw new Error("제목을 입력해주세요.")
-
   await db.insert(posts).values({
     board: input.board,
     tag: TAG_BY_BOARD[input.board] ?? "자유",
@@ -113,13 +109,12 @@ export async function createPost(input: {
     views: 0,
     baseLikes: 0,
   })
-
   revalidatePath("/")
+  revalidatePath("/board/[board]", "page")
 }
 
 export async function toggleLike(postId: number): Promise<{ liked: boolean }> {
   const anonId = await getAnonId()
-
   const existing = await db
     .select({ id: postLikes.id })
     .from(postLikes)
@@ -129,10 +124,11 @@ export async function toggleLike(postId: number): Promise<{ liked: boolean }> {
   if (existing.length > 0) {
     await db.delete(postLikes).where(and(eq(postLikes.postId, postId), eq(postLikes.userId, anonId)))
     revalidatePath("/")
+    revalidatePath("/board/[board]", "page")
     return { liked: false }
   }
-
   await db.insert(postLikes).values({ postId, userId: anonId })
   revalidatePath("/")
+  revalidatePath("/board/[board]", "page")
   return { liked: true }
 }
