@@ -14,7 +14,7 @@ import { PostCard } from "@/components/post-card"
 import { ChatPanel } from "@/components/chat-panel"
 import { WriteDialog } from "@/components/write-dialog"
 import { boards, type BoardId } from "@/lib/posts"
-import { type PostDTO, createPost, toggleLike } from "@/app/actions/posts"
+import { type PostDTO, createPost } from "@/app/actions/posts"
 import { cn } from "@/lib/utils"
 
 const pageIcons: Record<BoardId, LucideIcon> = {
